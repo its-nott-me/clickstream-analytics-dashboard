@@ -127,6 +127,7 @@ const Analytics = () => {
       ]);
       setSummary(summaryRes.data.data);
       setSessions(sessionsRes.data.data);
+      setSelectedSessionId(sessionsRes.data.data[0]?.sessionId);
     } catch {
       setError("API unavailable. Start backend and MongoDB.");
     }

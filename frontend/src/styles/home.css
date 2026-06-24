@@ -179,7 +179,14 @@
   width: var(--size, 54px);
   height: var(--size, 54px);
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(220, 38, 38, 0.75), rgba(245, 158, 11, 0.38) 45%, rgba(20, 184, 166, 0) 72%);
+
+  background: radial-gradient(
+    circle,
+    rgba(239, 68, 68, 0.95) 0%,
+    rgba(249, 115, 22, 0.7) 35%,
+    rgba(249, 115, 22, 0.25) 60%,
+    transparent 80%
+  );
   transform: translate(-50%, -50%);
   mix-blend-mode: multiply;
 }

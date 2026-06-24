@@ -1,13 +1,27 @@
+import { useEffect, useState } from "react";
+
 export const HeatmapCanvas = ({ asset, clicks }) => {
+  const [error, setError] = useState(false);
+  
+  useEffect(() => {
+    setError(false);
+  }, [asset.src])
+
+  if (error) {
+    return <div className="empty-state">No screenshot available for this page.</div>;
+  }
+
   return (
     <div className="heatmap-frame">
       <img
         className="heatmap-background"
         src={asset.src}
+        alt={`${asset.label || "Page"} heatmap background`}
         style={{
           width: "100%",
           height: "auto"
         }}
+        onError={() => setError(true)}
       />
 
       <div className="heatmap-overlay">
@@ -24,6 +38,9 @@ export const HeatmapCanvas = ({ asset, clicks }) => {
           />
         ))}
       </div>
+      {!clicks.length && (
+        <div className="heatmap-empty">No clicks recorded for this device size.</div>
+      )}
     </div>
   );
 };

@@ -121,8 +121,15 @@
       y,
       absolute_x: e.pageX,
       absolute_y: e.pageY,
+      viewport_x: e.clientX,
+      viewport_y: e.clientY,
       viewport_width: window.innerWidth,
-      viewport_height: window.innerHeight
+      viewport_height: window.innerHeight,
+      document_width: doc.scrollWidth,
+      document_height: doc.scrollHeight,
+      scroll_x: window.scrollX,
+      scroll_y: window.scrollY,
+      selector: getSelector(e.target)
     };
 
     queueEvent("click", basePayload);

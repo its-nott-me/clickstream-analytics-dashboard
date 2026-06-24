@@ -135,7 +135,14 @@ export const getHeatmaps = async (req, res) => {
       absoluteX: e.metadata.absoluteX,
       absoluteY: e.metadata.absoluteY,
       viewportX: e.metadata.viewportX,
-      viewportY: e.metadata.viewportY
+      viewportY: e.metadata.viewportY,
+      viewportWidth: e.metadata.viewportWidth,
+      viewportHeight: e.metadata.viewportHeight,
+      documentWidth: e.metadata.documentWidth,
+      documentHeight: e.metadata.documentHeight,
+      scrollX: e.metadata.scrollX,
+      scrollY: e.metadata.scrollY,
+      selector: e.metadata.selector
     }));
 
     const meta = { clickCount: clicks.length };
@@ -256,13 +263,49 @@ export const getPageAssets = async (req, res) => {
   try {
     // store in mongo to avoid redeployment
     const PAGE_ASSETS = {
-      "/": { src: `${API_URL}/uploads/home.png`, width: 2474, height: 2970, label: "Home" },
-      "/features": { src: `${API_URL}/uploads/features.png`, width: 2474, height: 2366, label: "Features" },
-      "/pricing": { src: `${API_URL}/uploads/pricing.png`, width: 2474, height: 1346, label: "Pricing" },
-      "/contact": { src: `${API_URL}/uploads/contact.png`, width: 2474, height: 1620, label: "Contact" }
+      // "/": { src: `${API_URL}/uploads/home.png`, width: 2474, height: 2970, label: "Home" },
+      // "/features": { src: `${API_URL}/uploads/features.png`, width: 2474, height: 2366, label: "Features" },
+      // "/pricing": { src: `${API_URL}/uploads/pricing.png`, width: 2474, height: 1346, label: "Pricing" },
+      // "/contact": { src: `${API_URL}/uploads/contact.png`, width: 2474, height: 1620, label: "Contact" },
+      "/": {
+        label: "Home",
+        src: `${API_URL}/uploads/home-desktop.png`,
+        images: {
+          desktop: { src: `${API_URL}/uploads/home-desktop.png` },
+          tablet: { src: `${API_URL}/uploads/home-tablet.png` },
+          mobile: { src: `${API_URL}/uploads/home-mobile.png` }
+        }
+      },
+      "/features": {
+        label: "Features",
+        src: `${API_URL}/uploads/features-desktop.png`,
+        images: {
+          desktop: { src: `${API_URL}/uploads/features-desktop.png` },
+          tablet: { src: `${API_URL}/uploads/features-tablet.png` },
+          mobile: { src: `${API_URL}/uploads/features-mobile.png` }
+        }
+      },
+      "/pricing": {
+        label: "Pricing",
+        src: `${API_URL}/uploads/home-desktop.png`,
+        images: {
+          desktop: { src: `${API_URL}/uploads/pricing-desktop.png` },
+          tablet: { src: `${API_URL}/uploads/pricing-tablet.png` },
+          mobile: { src: `${API_URL}/uploads/pricing-mobile.png` }
+        }
+      },
+      "/contact": {
+        label: "Contact",
+        src: `${API_URL}/uploads/contact-desktop.png`,
+        images: {
+          desktop: { src: `${API_URL}/uploads/contact-desktop.png` },
+          tablet: { src: `${API_URL}/uploads/contact-tablet.png` },
+          mobile: { src: `${API_URL}/uploads/contact-mobile.png` }
+        }
+      }
     };
     return res.status(200).json({ success: true, data: PAGE_ASSETS});
-  } catch {
+  } catch (error) {
     console.error("Error fetching page assets: ", error);
     return res.status(500).json({success: false, message: "Server Error"});
   }
