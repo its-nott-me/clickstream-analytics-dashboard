@@ -16,7 +16,8 @@ A MERN analytics assignment that tracks product behavior with a lightweight brow
 - `backend/` is an Express API with Mongoose models and aggregation endpoints.
 - `demo/` is a simple tracked page for generating heatmap and journey data.
 - `frontend/public/tracker.js` is the embeddable vanilla JavaScript tracker.
-- `backend/src/uploads/screenshots/` stores captured page screenshots as PNG files.
+- `#page-container` is the canonical wrapper used for click normalization.
+- `backend/src/uploads/` stores the manually provided page images used by the heatmap viewer.
 
 ## API Surface
 
@@ -24,10 +25,7 @@ A MERN analytics assignment that tracks product behavior with a lightweight brow
 - `GET /api/events/summary` returns dashboard totals, CTA rate, top pages, and top CTAs.
 - `GET /api/sessions` returns session counts, last activity, CTA clicks, and dwell time.
 - `GET /api/sessions/:sessionId/events` returns a chronological user journey.
-- `GET /api/heatmaps?url={pageUrl}` returns click coordinates and page-size metadata for one URL.
-- `GET /api/screenshots/exists?route={pageUrl}` checks whether a route screenshot is already stored.
-- `GET /api/screenshots?route={pageUrl}` returns screenshot metadata for one route.
-- `POST /api/screenshots` stores one PNG screenshot per route and returns its metadata.
+- `GET /api/heatmaps?url={pageUrl}` returns normalized click coordinates for one URL.
 
 ## Run Locally
 
@@ -50,6 +48,6 @@ Demo page: open `demo/index.html` in a browser after the frontend server is runn
 - Events are batched in the browser to reduce request volume and database pressure.
 - `navigator.sendBeacon()` is used on exit so the final queue can be delivered without blocking navigation.
 - A single flattened `Event` collection keeps writes fast and lets MongoDB aggregation power the dashboard.
-- Heatmaps render normalized coordinates over an html2canvas screenshot captured from the same DOM dimensions used by click tracking.
-- Screenshots are stored as files, while MongoDB stores only route, path, width, height, and creation time metadata.
+- Heatmaps render normalized coordinates over a manual page image with the same aspect ratio as the tracked route.
+- Click tracking uses only the bounding box of `#page-container`, so it is independent of document height and viewport height.
 - CTA tracking is metadata-driven, so product teams can add explicit `data-cf-cta` labels without changing the tracker.

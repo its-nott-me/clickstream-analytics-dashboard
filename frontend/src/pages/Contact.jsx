@@ -1,6 +1,6 @@
 const Contact = () => {
   return (
-    <div className="container">
+    <div id="page-container" className="container">
       <div className="contact-grid">
         <div className="contact-media">
           <img

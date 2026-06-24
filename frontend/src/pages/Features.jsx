@@ -9,10 +9,10 @@ const features = [
 
 const Features = () => {
   const [activeFeature, setActiveFeature] = useState(0);
-  const [beaconMode, setBeaconMode] = useState(true);
+  const [CTA, setCTA] = useState(true);
 
   return (
-    <div className="container">
+    <div id="page-container" className="container">
       <div className="eyebrow">Platform</div>
       <h1 className="page-title">Built for fast signal.</h1>
 
@@ -48,8 +48,8 @@ const Features = () => {
 
         <div className="dashboard-card">
           <h3>Reliability mode</h3>
-          <button className={`btn ${beaconMode ? "btn-primary" : "btn-outline"}`} onClick={() => setBeaconMode(!beaconMode)} data-cf-cta="Toggle beacon mode">
-            Beacon flush {beaconMode ? "on" : "off"}
+          <button className={`btn ${CTA ? "btn-primary" : "btn-outline"}`} onClick={() => setCTA(p => !p)} data-cf-cta="Toggle Button">
+            CTA
           </button>
         </div>
       </section>

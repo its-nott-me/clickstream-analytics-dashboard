@@ -1,4 +1,5 @@
-.app-container {
+.app-container,
+#page-container {
   min-height: 100vh;
 }
 
@@ -56,7 +57,12 @@
 .nav-cta {
   border: 1px solid #111827;
   background: #111827;
-  color: #ffffff !important;
+  color: #ffffff;
+}
+
+.nav-cta:hover,
+.nav-cta.active {
+  color: #252525;
 }
 
 .main-content {
@@ -366,6 +372,7 @@
 .dashboard-shell {
   display: grid;
   gap: 1rem;
+  grid-auto-rows: max-content;
 }
 
 .dashboard-header {
@@ -421,6 +428,7 @@
   border-radius: 8px;
   background: #edf2f5;
   width: max-content;
+  height: min-content
 }
 
 .tab {
@@ -540,255 +548,31 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
-.heatmap-scroll-shell {
-  height: min(72vh, 760px);
+.heatmap-stage {
   overflow: auto;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   background: #dfe6eb;
+  padding: 1rem;
 }
 
-.heatmap-image-frame {
+.heatmap-frame {
   position: relative;
-  width: min(100%, 1120px);
-  margin: 0 auto;
-  background: #ffffff;
-  box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
+  width: 100%;
+  max-width: 1920px;
+  line-height: 0;
 }
 
-.heatmap-screenshot {
-  display: block;
+.heatmap-background {
   width: 100%;
   height: auto;
-  user-select: none;
+  display: block;
 }
 
 .heatmap-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
-}
-
-.heatmap-page {
-  position: relative;
-  width: min(100%, 980px);
-  margin: 0 auto;
-  overflow: hidden;
-  background:
-    linear-gradient(#eef2f4 1px, transparent 1px),
-    linear-gradient(90deg, #eef2f4 1px, transparent 1px),
-    #ffffff;
-  background-size: 64px 64px;
-  box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
-}
-
-.skel-topbar,
-.skel-title,
-.skel-image,
-.skel-stack span,
-.skel-panel,
-.skel-cta,
-.skel-price-card,
-.skel-form span,
-.skel-copy .line,
-.skel-buttons span,
-.skel-metrics span,
-.skel-list span,
-.skel-heat-preview,
-.skel-three-cards span {
-  position: relative;
-  z-index: 0;
-  border-radius: 8px;
-  background: #edf2f5;
-}
-
-.skel-topbar {
-  height: 64px;
-  margin: 24px;
-}
-
-.skel-title {
-  width: min(58%, 560px);
-  height: 190px;
-  margin: 24px;
-}
-
-.skel-title.compact {
-  height: 130px;
-  width: min(62%, 640px);
-}
-
-.skel-home-hero,
-.skel-feature-layout,
-.skel-contact {
-  display: grid;
-  grid-template-columns: 0.95fr 1.05fr;
-  gap: 24px;
-  margin: 24px;
-}
-
-.skel-home-hero {
-  min-height: 520px;
-}
-
-.skel-copy {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 18px;
-}
-
-.skel-copy .line {
-  display: block;
-  height: 22px;
-}
-
-.skel-copy .line.small {
-  width: 42%;
-  height: 30px;
-}
-
-.skel-copy .line.xl {
-  width: 95%;
-  height: 72px;
-  background: #dfe8ee;
-}
-
-.skel-copy .line.narrow {
-  width: 72%;
-}
-
-.skel-copy .line.medium {
-  width: 80%;
-  height: 42px;
-}
-
-.skel-buttons,
-.skel-metrics,
-.skel-three-cards,
-.skel-pricing {
-  display: grid;
-  gap: 16px;
-}
-
-.skel-buttons {
-  grid-template-columns: 150px 170px;
-}
-
-.skel-buttons span {
-  height: 46px;
-}
-
-.skel-metrics {
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: 18px;
-}
-
-.skel-metrics span,
-.skel-three-cards span {
-  height: 92px;
-}
-
-.skel-image {
-  min-height: 420px;
-  background: linear-gradient(135deg, #dbeafe, #ccfbf1);
-}
-
-.skel-image.hero-img {
-  min-height: 560px;
-}
-
-.skel-dashboard-preview {
-  display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  gap: 24px;
-  margin: 24px;
-}
-
-.skel-list,
-.skel-stack,
-.skel-form {
-  display: grid;
-  gap: 16px;
-}
-
-.skel-list span {
-  height: 112px;
-}
-
-.skel-heat-preview {
-  min-height: 380px;
-  background:
-    radial-gradient(circle at 70% 22%, rgba(220, 38, 38, 0.34), transparent 14%),
-    radial-gradient(circle at 48% 50%, rgba(245, 158, 11, 0.26), transparent 12%),
-    #edf2f5;
-}
-
-.skel-three-cards {
-  grid-template-columns: repeat(3, 1fr);
-  margin: 24px;
-}
-
-.skel-feature-layout {
-  grid-template-columns: 1.1fr 0.9fr;
-}
-
-.skel-stack span {
-  min-height: 132px;
-}
-
-.skel-two-col {
-  display: grid;
-  grid-template-columns: 1.25fr 0.75fr;
-  gap: 24px;
-  margin: 24px;
-}
-
-.skel-panel.tall {
-  min-height: 340px;
-}
-
-.skel-panel.short {
-  min-height: 210px;
-}
-
-.skel-cta {
-  width: 180px;
-  height: 48px;
-  margin: 24px;
-}
-
-.skel-pricing {
-  grid-template-columns: repeat(2, 1fr);
-  margin: 24px;
-}
-
-.skel-price-card {
-  min-height: 360px;
-}
-
-.skel-price-card.dark {
-  background: #172033;
-}
-
-.skel-contact {
-  grid-template-columns: 1fr 1fr;
-  align-items: start;
-}
-
-.skel-form {
-  padding: 24px;
-  border: 1px solid #e7edf1;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.skel-form span {
-  height: 52px;
-}
-
-.skel-form span:last-child {
-  height: 150px;
 }
 
 .heatmap-dot {
@@ -868,6 +652,66 @@ textarea:focus {
 
 .contact-media {
   min-height: 560px;
+}
+
+.session-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-mini {
+  background: rgba(255,255,255,0.04);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.stat-mini span {
+  display: block;
+  opacity: .7;
+  font-size: .8rem;
+}
+
+.stat-mini strong {
+  font-size: 1.25rem;
+}
+
+.event-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filter-btn {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.filter-btn.active {
+  background: #4f46e5;
+  color: white;
+}
+
+.journey-card {
+  margin-top: 20px;
+}
+
+.journey-path {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.journey-node {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 500;
 }
 
 @media (max-width: 900px) {

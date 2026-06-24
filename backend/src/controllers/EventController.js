@@ -21,6 +21,8 @@ export const recordEventBatch = async (req, res) => {
       metadata: {
         x: event.x,
         y: event.y,
+        containerWidth: event.container_width,
+        containerHeight: event.container_height,
         absoluteX: event.absolute_x,
         absoluteY: event.absolute_y,
         viewportX: event.viewport_x,
@@ -127,21 +129,15 @@ export const getHeatmaps = async (req, res) => {
     const clicks = clickEvents.map(e => ({
       x: e.metadata.x,
       y: e.metadata.y,
+      containerWidth: e.metadata.containerWidth,
+      containerHeight: e.metadata.containerHeight,
       absoluteX: e.metadata.absoluteX,
       absoluteY: e.metadata.absoluteY,
       viewportX: e.metadata.viewportX,
-      viewportY: e.metadata.viewportY,
-      documentWidth: e.metadata.documentWidth,
-      documentHeight: e.metadata.documentHeight
+      viewportY: e.metadata.viewportY
     }));
 
-    const documentHeights = clicks.map(click => click.documentHeight).filter(Boolean);
-    const documentWidths = clicks.map(click => click.documentWidth).filter(Boolean);
-    const meta = {
-      clickCount: clicks.length,
-      documentHeight: documentHeights.length ? Math.max(...documentHeights) : 2200,
-      documentWidth: documentWidths.length ? Math.max(...documentWidths) : 1440
-    };
+    const meta = { clickCount: clicks.length };
 
     return res.status(200).json({ success: true, data: clicks, meta });
   } catch (error) {
@@ -250,3 +246,23 @@ export const getAnalyticsSummary = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+
+// @desc    Get page-assets like url to screenshots, and metadata
+// @route   GET /api/heatmaps/page-assets
+// @access  Public
+export const getPageAssets = async (req, res) => {
+  try {
+    // store in mongo to avoid redeployment
+    const PAGE_ASSETS = {
+      "/": { src: "http://localhost:5000/api/uploads/home.png", width: 2474, height: 2970, label: "Home" },
+      "/features": { src: "http://localhost:5000/api/uploads/features.png", width: 2474, height: 2366, label: "Features" },
+      "/pricing": { src: "http://localhost:5000/api/uploads/pricing.png", width: 2474, height: 1346, label: "Pricing" },
+      "/contact": { src: "http://localhost:5000/api/uploads/contact.png", width: 2474, height: 1620, label: "Contact" }
+    };
+    return res.status(200).json({ success: true, data: PAGE_ASSETS});
+  } catch {
+    console.error("Error fetching page assets: ", error);
+    return res.status(500).json({success: false, message: "Server Error"});
+  }
+}

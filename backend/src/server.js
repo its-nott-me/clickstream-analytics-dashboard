@@ -6,7 +6,6 @@ import connectDB from "./config/db.js";
 import eventRoutes from "./routes/events.js";
 import sessionRoutes from "./routes/sessions.js";
 import heatmapRoutes from "./routes/heatmaps.js";
-import screenshotRoutes from "./routes/screenshots.js";
 
 dotenv.config();
 
@@ -27,7 +26,6 @@ app.use("/api/uploads", express.static("src/uploads"));
 app.use("/api/events", eventRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/heatmaps", heatmapRoutes);
-app.use("/api/screenshots", screenshotRoutes);
 
 // Root Endpoint
 app.get("/", (req, res) => {

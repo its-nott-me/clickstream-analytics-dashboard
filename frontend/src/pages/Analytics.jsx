@@ -47,6 +47,36 @@ const BarList = ({ data = [], empty = "No data yet." }) => {
   );
 };
 
+const HeatmapCanvas = ({ asset, clicks }) => {
+  return (
+    <div className="heatmap-frame">
+      <img
+        className="heatmap-background"
+        src={asset.src}
+        style={{
+          width: "100%",
+          height: "auto"
+        }}
+      />
+
+      <div className="heatmap-overlay">
+        {clicks.map((click, i) => (
+          <span
+            key={i}
+            className="heatmap-dot"
+            style={{
+              position: "absolute",
+              left: `${click.x * 100}%`,
+              top: `${click.y * 100}%`,
+              transform: "translate(-50%, -50%)"
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const Analytics = () => {
   const [activeTab, setActiveTab] = useState("sessions");
   const [summary, setSummary] = useState(null);
@@ -55,16 +85,92 @@ const Analytics = () => {
   const [sessionEvents, setSessionEvents] = useState([]);
   const [urlInput, setUrlInput] = useState("http://localhost:5173/");
   const [heatmapClicks, setHeatmapClicks] = useState([]);
-  const [heatmapMeta, setHeatmapMeta] = useState({ documentHeight: 0, documentWidth: 0, clickCount: 0 });
-  const [screenshot, setScreenshot] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pageAssets, setPageAssets] = useState({});
 
   const selectedSession = useMemo(
     () => sessions.find((session) => session.sessionId === selectedSessionId),
     [sessions, selectedSessionId]
   );
 
+  const sessionSummary = useMemo(() => {
+    if (!sessionEvents.length) return null;
+
+    const pageViews = sessionEvents.filter(
+      e => e.eventType === "page_view"
+    );
+
+    const clicks = sessionEvents.filter(
+      e => e.eventType === "click"
+    );
+
+    const ctas = sessionEvents.filter(
+      e => e.eventType === "cta_click"
+    );
+
+    const timeSpent = sessionEvents
+      .filter(e => e.eventType === "time_spent")
+      .reduce(
+        (sum, e) => sum + (e.metadata?.durationMs || 0),
+        0
+      );
+
+    return {
+      pageViews: pageViews.length,
+      clicks: clicks.length,
+      ctas: ctas.length,
+      timeSpent
+    };
+  }, [sessionEvents]);
+
+  const journeyPath = useMemo(() => {
+    const pages = sessionEvents
+      .filter(e => e.eventType === "page_view")
+      .map(e => pagePath(e.url));
+
+    return pages.filter(
+      (page, index) => page !== pages[index - 1]
+    );
+  }, [sessionEvents]);
+
+  const pageStats = useMemo(() => {
+    const stats = {};
+
+    sessionEvents.forEach(event => {
+      const page = pagePath(event.url);
+
+      if (!stats[page]) {
+        stats[page] = {
+          page,
+          views: 0,
+          clicks: 0,
+          ctas: 0
+        };
+      }
+
+      if (event.eventType === "page_view") {
+        stats[page].views += 1;
+      }
+
+      if (event.eventType === "click") {
+        stats[page].clicks += 1;
+      }
+
+      if (event.eventType === "cta_click") {
+        stats[page].ctas += 1;
+      }
+    });
+
+    return Object.values(stats);
+  }, [sessionEvents]);
+
+  const getPageAsset = (url = "") => {
+    const path = pagePath(url);
+    return pageAssets[path] || pageAssets?.["/"] || null;
+  }
+  const selectedAsset = getPageAsset(urlInput);
+  
   const refreshOverview = async () => {
     setError("");
     try {
@@ -91,42 +197,45 @@ const Analytics = () => {
 
   const fetchHeatmap = async () => {
     setLoading(true);
-    setError("");
-    setScreenshot(null);
-
     try {
-      const [heatmapRes, screenshotRes] = await Promise.allSettled([
-        axios.get(`${BASE_URL}/heatmaps?url=${encodeURIComponent(urlInput)}`),
-        axios.get(`${BASE_URL}/screenshots?route=${encodeURIComponent(urlInput)}`)
-      ]);
-
-      if (heatmapRes.status === "fulfilled") {
-        setHeatmapClicks(heatmapRes.value.data.data);
-        setHeatmapMeta(heatmapRes.value.data.meta || { clickCount: heatmapRes.value.data.data.length });
-      } else {
-        setHeatmapClicks([]);
-        setHeatmapMeta({ documentHeight: 0, documentWidth: 0, clickCount: 0 });
-      }
-
-      if (screenshotRes.status === "fulfilled") {
-        setScreenshot(screenshotRes.value.data.data);
-      } else {
-        setError("No screenshot stored for this route yet. Visit the page once with the tracker active, then regenerate.");
-      }
-    } catch {
-      setError("Could not load heatmap.");
+      const heatmapRes = await axios.get(
+        `${BASE_URL}/heatmaps?url=${encodeURIComponent(urlInput)}`
+      );
+      setHeatmapClicks(heatmapRes.data.data);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchPageAssets = async() => {
+    setLoading(true);
+    setError("");
+    try{
+      await axios.get(`${BASE_URL}/heatmaps/page-assets`).then(res => {setPageAssets(res.data.data)})
+    } catch {
+      setError("Could not load page assets.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const pageOptions = Object.keys(pageAssets);
+
   useEffect(() => {
-    const timer = window.setTimeout(refreshOverview, 0);
-    return () => window.clearTimeout(timer);
+    refreshOverview();
+    fetchPageAssets();
   }, []);
 
+  useEffect(() => {
+    if(!urlInput) return;
+
+    fetchHeatmap(urlInput);
+  }, [urlInput])
+
+  if(loading) return null;
+
   return (
-    <div className="container dashboard-shell">
+    <div id="page-container" className="container dashboard-shell">
       <div className="dashboard-header">
         <div className="dashboard-title">
           <div className="eyebrow">Dashboard</div>
@@ -134,7 +243,6 @@ const Analytics = () => {
         </div>
         <div className="dashboard-actions">
           <button className="btn btn-outline" onClick={refreshOverview}>Refresh</button>
-          <a className="btn btn-primary" href="http://localhost:5173/tracker.js" target="_blank" rel="noreferrer">Tracker Script</a>
         </div>
       </div>
 
@@ -155,60 +263,144 @@ const Analytics = () => {
 
       {activeTab === "sessions" && (
         <div className="dashboard-grid">
+
+          {/* Main Content - Detailed Journey */}
           <div className="dashboard-card">
+            <h3>
+              {selectedSession
+                ? `Session ${selectedSession.sessionId.slice(0, 8)}`
+                : "Session Details"}
+            </h3>
+
+            {!selectedSessionId ? (
+              <p className="muted">Select a session.</p>
+            ) : (
+              <>
+                <div className="session-summary">
+                  <div className="stat-mini">
+                    <span>Pages</span>
+                    <strong>{sessionSummary?.pageViews || 0}</strong>
+                  </div>
+
+                  <div className="stat-mini">
+                    <span>Clicks</span>
+                    <strong>{sessionSummary?.clicks || 0}</strong>
+                  </div>
+
+                  <div className="stat-mini">
+                    <span>CTAs</span>
+                    <strong>{sessionSummary?.ctas || 0}</strong>
+                  </div>
+
+                  <div className="stat-mini">
+                    <span>Time</span>
+                    <strong>{formatDuration(sessionSummary?.timeSpent)}</strong>
+                  </div>
+                </div>
+
+                <div className="dashboard-card journey-card">
+                  <h4>Journey</h4>
+
+                  <div className="journey-path">
+                    {journeyPath.length ? (
+                      journeyPath.map((page, index) => (
+                        <div
+                          key={`${page}-${index}`}
+                          className="journey-node"
+                        >
+                          {page}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="muted">No journey data.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="dashboard-card">
+                  <h4>Page Breakdown</h4>
+
+                  <div className="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Page</th>
+                          <th>Views</th>
+                          <th>Clicks</th>
+                          <th>CTAs</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {pageStats.map(page => (
+                          <tr key={page.page}>
+                            <td>{page.page}</td>
+                            <td>{page.views}</td>
+                            <td>{page.clicks}</td>
+                            <td>{page.ctas}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Sidebar - Sessions */}
+          <aside className="dashboard-card">
             <h3>Sessions</h3>
+
             <div className="table-wrapper">
               <table>
                 <thead>
                   <tr>
                     <th>Session</th>
-                    <th>Events</th>
+                    {/* <th>Events</th> */}
                     <th>CTA</th>
                     <th>Time</th>
                     <th>Last active</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {sessions.length ? sessions.map((session) => (
-                    <tr key={session.sessionId} className={`clickable ${selectedSessionId === session.sessionId ? "selected" : ""}`} onClick={() => fetchSessionJourney(session.sessionId)}>
-                      <td>{session.sessionId.slice(0, 8)}...</td>
-                      <td>{session.totalEvents}</td>
-                      <td>{session.ctaClicks || 0}</td>
-                      <td>{formatDuration(session.timeSpentMs)}</td>
-                      <td>{new Date(session.lastActive).toLocaleString()}</td>
+                  {sessions.length ? (
+                    sessions.map((session) => (
+                      <tr
+                        key={session.sessionId}
+                        className={`clickable ${
+                          selectedSessionId === session.sessionId
+                            ? "selected"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          fetchSessionJourney(session.sessionId)
+                        }
+                      >
+                        <td>{session.sessionId.slice(0, 8)}...</td>
+                        {/* <td>{session.totalEvents}</td> */}
+                        <td>{session.ctaClicks || 0}</td>
+                        <td>{formatDuration(session.timeSpentMs)}</td>
+                        <td>
+                          {new Date(
+                            session.lastActive
+                          ).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="empty-state">
+                        No sessions yet.
+                      </td>
                     </tr>
-                  )) : (
-                    <tr><td colSpan="5" className="empty-state">No sessions yet.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
-          </div>
-
-          <aside className="dashboard-card">
-            <h3>{selectedSession ? `Journey ${selectedSession.sessionId.slice(0, 8)}` : "Journey"}</h3>
-            {!selectedSessionId ? (
-              <p className="muted">Select a session.</p>
-            ) : (
-              <div className="timeline">
-                {sessionEvents.map((event) => (
-                  <div className="timeline-item" key={event._id}>
-                    <div className="timeline-time">{new Date(event.timestamp).toLocaleTimeString()}</div>
-                    <div className="timeline-content">
-                      <strong>{eventLabel(event)}</strong>
-                      <p className="muted">{pagePath(event.url)}</p>
-                      {(event.eventType === "click" || event.eventType === "cta_click") && (
-                        <p className="coordinate-line">
-                          x {Number(event.metadata?.x || 0).toFixed(3)} · y {Number(event.metadata?.y || 0).toFixed(3)}
-                          {event.metadata?.absoluteX ? ` · ${Math.round(event.metadata.absoluteX)}, ${Math.round(event.metadata.absoluteY)}px` : ""}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </aside>
+
         </div>
       )}
 
@@ -216,39 +408,30 @@ const Analytics = () => {
         <div className="dashboard-card">
           <div className="dashboard-header" style={{ marginBottom: "1rem" }}>
             <div>
-              <h3>Screenshot heatmap</h3>
+              <h3>Container heatmap</h3>
               <p className="muted">
-                {(heatmapMeta.clickCount || heatmapClicks.length)} clicks
-                {screenshot ? ` · ${screenshot.width}x${screenshot.height}px · ${pagePath(screenshot.route)}` : ` · ${pagePath(urlInput)}`}
-              </p>
+                {heatmapClicks.length} clicks · {selectedAsset?.label || "Unknown page"}
+              </p>            
             </div>
             <div className="url-form">
-              <input value={urlInput} onChange={(event) => setUrlInput(event.target.value)} placeholder="http://localhost:5173/" />
-              <button className="btn btn-primary" onClick={fetchHeatmap} disabled={loading}>{loading ? "Loading" : "Generate"}</button>
+              <select
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+              >
+                {pageOptions.map((path) => (
+                  <option
+                    key={path}
+                    value={`http://localhost:5173${path}`}
+                  >
+                    {pageAssets[path]?.label || path}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          <div className="heatmap-scroll-shell">
-            {screenshot ? (
-              <div className="heatmap-image-frame">
-                <img className="heatmap-screenshot" src={screenshot.url} alt={`Captured page ${pagePath(screenshot.route)}`} />
-                <div className="heatmap-overlay">
-                  {heatmapClicks.map((click, index) => (
-                    <span
-                      className="heatmap-dot"
-                      key={`${click.x}-${click.y}-${index}`}
-                      title={`x ${Number(click.x || 0).toFixed(3)}, y ${Number(click.y || 0).toFixed(3)}`}
-                      style={{
-                        left: `${Number(click.x || 0) * 100}%`,
-                        top: `${Number(click.y || 0) * 100}%`
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="empty-state">No screenshot available for this route.</div>
-            )}
+          <div className="heatmap-stage">
+            <HeatmapCanvas asset={selectedAsset} clicks={heatmapClicks} />
           </div>
         </div>
       )}

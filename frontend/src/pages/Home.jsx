@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
-    <div className="container">
+    <div id="page-container" className="container">
       <section className="hero">
         <div>
           <div className="eyebrow">Product analytics for funnels</div>

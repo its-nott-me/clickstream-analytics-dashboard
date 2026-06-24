@@ -27,6 +27,8 @@ const EventSchema = new mongoose.Schema(
     metadata: {
       x: Number,
       y: Number,
+      containerWidth: Number,
+      containerHeight: Number,
       absoluteX: Number,
       absoluteY: Number,
       viewportX: Number,
