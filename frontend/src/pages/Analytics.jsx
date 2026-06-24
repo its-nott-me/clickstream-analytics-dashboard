@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import "../styles/analytics.css";
 import "../styles/components/table.css";
+import { SessionsTab } from "../components/analytics/SessionsTab";
+import { HeatMapTab } from "../components/analytics/HeatmapTab";
+import { InsightsTab } from "../components/analytics/InsightsTab";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
@@ -19,58 +22,6 @@ const pagePath = (url = "") => {
   } catch {
     return url || "/";
   }
-};
-
-const BarList = ({ data = [], empty = "No data yet." }) => {
-  const max = Math.max(...data.map((item) => item.value || 0), 1);
-
-  if (!data.length) return <p className="muted">{empty}</p>;
-
-  return (
-    <div className="bar-list">
-      {data.map((item) => (
-        <div className="bar-row" key={`${item.label}-${item.value}`}>
-          <div className="bar-label">
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-          </div>
-          <div className="bar-track">
-            <span style={{ width: `${Math.max(6, ((item.value || 0) / max) * 100)}%` }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const HeatmapCanvas = ({ asset, clicks }) => {
-  return (
-    <div className="heatmap-frame">
-      <img
-        className="heatmap-background"
-        src={asset.src}
-        style={{
-          width: "100%",
-          height: "auto"
-        }}
-      />
-
-      <div className="heatmap-overlay">
-        {clicks.map((click, i) => (
-          <span
-            key={i}
-            className="heatmap-dot"
-            style={{
-              position: "absolute",
-              left: `${click.x * 100}%`,
-              top: `${click.y * 100}%`,
-              transform: "translate(-50%, -50%)"
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  );
 };
 
 const Analytics = () => {
@@ -258,203 +209,33 @@ const Analytics = () => {
       </div>
 
       {activeTab === "sessions" && (
-        <div className="dashboard-grid">
-
-          {/* Main Content - Detailed Journey */}
-          <div className="dashboard-card">
-            <h3>
-              {selectedSession
-                ? `Session ${selectedSession.sessionId.slice(0, 8)}`
-                : "Session Details"}
-            </h3>
-
-            {!selectedSessionId ? (
-              <p className="muted">Select a session.</p>
-            ) : (
-              <>
-                <div className="session-summary">
-                  <div className="stat-mini">
-                    <span>Pages</span>
-                    <strong>{sessionSummary?.pageViews || 0}</strong>
-                  </div>
-
-                  <div className="stat-mini">
-                    <span>Clicks</span>
-                    <strong>{sessionSummary?.clicks || 0}</strong>
-                  </div>
-
-                  <div className="stat-mini">
-                    <span>CTAs</span>
-                    <strong>{sessionSummary?.ctas || 0}</strong>
-                  </div>
-
-                  <div className="stat-mini">
-                    <span>Time</span>
-                    <strong>{formatDuration(sessionSummary?.timeSpent)}</strong>
-                  </div>
-                </div>
-
-                <div className="dashboard-card journey-card">
-                  <h4>Journey</h4>
-
-                  <div className="journey-path">
-                    {journeyPath.length ? (
-                      journeyPath.map((page, index) => (
-                        <div
-                          key={`${page}-${index}`}
-                          className="journey-node"
-                        >
-                          {page}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="muted">No journey data.</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="dashboard-card">
-                  <h4>Page Breakdown</h4>
-
-                  <div className="table-wrapper">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Page</th>
-                          <th>Views</th>
-                          <th>Clicks</th>
-                          <th>CTAs</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {pageStats.map(page => (
-                          <tr key={page.page}>
-                            <td>{page.page}</td>
-                            <td>{page.views}</td>
-                            <td>{page.clicks}</td>
-                            <td>{page.ctas}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Sidebar - Sessions */}
-          <aside className="dashboard-card">
-            <h3>Sessions</h3>
-
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Session</th>
-                    {/* <th>Events</th> */}
-                    <th>CTA</th>
-                    <th>Time</th>
-                    <th>Last active</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {sessions.length ? (
-                    sessions.map((session) => (
-                      <tr
-                        key={session.sessionId}
-                        className={`clickable ${
-                          selectedSessionId === session.sessionId
-                            ? "selected"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          fetchSessionJourney(session.sessionId)
-                        }
-                      >
-                        <td>{session.sessionId.slice(0, 8)}...</td>
-                        {/* <td>{session.totalEvents}</td> */}
-                        <td>{session.ctaClicks || 0}</td>
-                        <td>{formatDuration(session.timeSpentMs)}</td>
-                        <td>
-                          {new Date(
-                            session.lastActive
-                          ).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="empty-state">
-                        No sessions yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </aside>
-
-        </div>
+        <SessionsTab
+          sessions={sessions}
+          selectedSession={selectedSession}
+          selectedSessionId={selectedSessionId}
+          sessionSummary={sessionSummary}
+          journeyPath={journeyPath}
+          pageStats={pageStats}
+          fetchSessionJourney={fetchSessionJourney}
+        />
       )}
 
       {activeTab === "heatmap" && (
-        <div className="dashboard-card">
-          <div className="dashboard-header" style={{ marginBottom: "1rem" }}>
-            <div>
-              <h3>Container heatmap</h3>
-              <p className="muted">
-                {heatmapClicks.length} clicks · {selectedAsset?.label || "Unknown page"}
-              </p>            
-            </div>
-            <div className="url-form">
-              <select
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-              >
-                {pageOptions.map((path) => (
-                  <option
-                    key={path}
-                    value={`${FRONTEND_URL}${path}`}
-                  >
-                    {pageAssets[path]?.label || path}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="heatmap-stage">
-            <HeatmapCanvas asset={selectedAsset} clicks={heatmapClicks} />
-          </div>
-        </div>
+        <HeatMapTab
+          heatmapClicks={heatmapClicks}
+          selectedAsset={selectedAsset}
+          pageAssets={pageAssets}
+          pageOptions={pageOptions}
+          urlInput={urlInput}
+          setUrlInput={setUrlInput}
+        />
       )}
 
       {activeTab === "insights" && (
-        <div className="analytics-grid">
-          <div className="dashboard-card">
-            <h3>Event mix</h3>
-            <BarList data={summary?.eventBreakdown || []} />
-          </div>
-          <div className="dashboard-card">
-            <h3>Conversion path</h3>
-            <BarList data={summary?.funnel || []} />
-          </div>
-          <div className="dashboard-card">
-            <h3>Top pages</h3>
-            <BarList data={(summary?.topPages || []).map((page) => ({ label: pagePath(page.url), value: page.views }))} empty="No page views recorded." />
-          </div>
-          <div className="dashboard-card">
-            <h3>Top CTAs</h3>
-            <BarList data={(summary?.topCtas || []).map((cta) => ({ label: cta.label || "Untitled", value: cta.clicks }))} empty="No CTA clicks recorded." />
-          </div>
-          <div className="dashboard-card wide-card">
-            <h3>Avg time by page</h3>
-            <BarList data={(summary?.engagementByPage || []).map((page) => ({ label: pagePath(page.url), value: Math.round(page.avgTimeMs / 1000) }))} empty="No dwell-time samples yet." />
-          </div>
-        </div>
+        <InsightsTab 
+          summary={summary}
+          pagePath={pagePath}
+        />
       )}
     </div>
   );
