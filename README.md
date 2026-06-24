@@ -41,8 +41,6 @@ Frontend: `http://localhost:5173`
 
 Backend: `http://localhost:5000`
 
-Demo page: open `demo/index.html` in a browser after the frontend server is running.
-
 ## Design Decisions
 
 - Events are batched in the browser to reduce request volume and database pressure.
