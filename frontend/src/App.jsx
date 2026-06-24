@@ -4,7 +4,10 @@ import Analytics from "./pages/Analytics";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import Features from "./pages/Features";
-import "./App.css";
+import "./styles/global.css";
+import "./styles/layout.css";
+import "./styles/components/button.css";
+import "./styles/components/input.css";
 
 function App() {
   return (

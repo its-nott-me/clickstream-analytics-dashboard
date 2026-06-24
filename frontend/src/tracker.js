@@ -1,5 +1,6 @@
 (function() {
-  const BACKEND_URL = "http://localhost:5000/api/events";
+  const API_URL = import.meta.env.VITE_API_URL;
+  const EVENT_URL = `${API_URL}/events`;
   const BATCH_SIZE_LIMIT = 10;
   const FLUSH_INTERVAL_MS = 5000;
 
@@ -52,11 +53,11 @@
 
     if (isUnload && navigator.sendBeacon) {
       const blob = new Blob([payload], { type: "text/plain" });
-      navigator.sendBeacon(BACKEND_URL, blob);
+      navigator.sendBeacon(EVENT_URL, blob);
       return;
     }
 
-    fetch(BACKEND_URL, {
+    fetch(EVENT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: payload
@@ -107,87 +108,44 @@
     }
   }
 
-  // function trackContainerClick(e) {
-  //   if (!shouldTrackUrl(currentUrl)) return;
+  function trackClick(e) {
+    if (!shouldTrackUrl(currentUrl)) return;
 
-  //   const container = getPageContainer();
-  //   if (!container) return;
-  //   if (!container.contains(e.target)) return;
+    const doc = document.documentElement;
 
-  //   const rect = container.getBoundingClientRect();
-  //   if (!rect.width || !rect.height) return;
+    const x = e.pageX / doc.scrollWidth;
+    const y = e.pageY / doc.scrollHeight;
 
-  //   const absoluteX = e.clientX - rect.left;
-  //   const absoluteY = e.clientY - rect.top;
-  //   const x = Math.min(1, Math.max(0, absoluteX / rect.width));
-  //   const y = Math.min(1, Math.max(0, absoluteY / rect.height));
+    const basePayload = {
+      x,
+      y,
+      absolute_x: e.pageX,
+      absolute_y: e.pageY,
+      viewport_width: window.innerWidth,
+      viewport_height: window.innerHeight
+    };
 
-  //   const basePayload = {
-  //     x,
-  //     y,
-  //     absolute_x: absoluteX,
-  //     absolute_y: absoluteY,
-  //     container_width: rect.width,
-  //     container_height: rect.height
-  //   };
+    queueEvent("click", basePayload);
 
-  //   queueEvent("click", basePayload);
+    const cta = e.target.closest("[data-cf-cta], button, a, [role='button']");
+    if (cta) {
+      const label =
+        cta.getAttribute("data-cf-cta") ||
+        cta.getAttribute("aria-label") ||
+        cta.textContent ||
+        cta.href ||
+        "Untitled CTA";
 
-  //   const cta = e.target.closest("[data-cf-cta], button, a, [role='button']");
-  //   if (cta) {
-  //     const label = cta.getAttribute("data-cf-cta") || cta.getAttribute("aria-label") || cta.textContent || cta.href || "Untitled CTA";
-  //     queueEvent("cta_click", {
-  //       ...basePayload,
-  //       label: label.trim().replace(/\s+/g, " ").slice(0, 80),
-  //       selector: getSelector(cta)
-  //     });
-  //   }
-  // }
-
-function trackClick(e) {
-  if (!shouldTrackUrl(currentUrl)) return;
-
-  const doc = document.documentElement;
-
-  const x = e.pageX / doc.scrollWidth;
-  const y = e.pageY / doc.scrollHeight;
-
-  const basePayload = {
-    x,
-    y,
-    absolute_x: e.pageX,
-    absolute_y: e.pageY,
-    viewport_width: window.innerWidth,
-    viewport_height: window.innerHeight
-  };
-
-  queueEvent("click", basePayload);
-
-  const cta = e.target.closest("[data-cf-cta], button, a, [role='button']");
-  if (cta) {
-    const label =
-      cta.getAttribute("data-cf-cta") ||
-      cta.getAttribute("aria-label") ||
-      cta.textContent ||
-      cta.href ||
-      "Untitled CTA";
-
-    queueEvent("cta_click", {
-      ...basePayload,
-      label: label.trim().replace(/\s+/g, " ").slice(0, 80),
-      selector: getSelector(cta)
-    });
+      queueEvent("cta_click", {
+        ...basePayload,
+        label: label.trim().replace(/\s+/g, " ").slice(0, 80),
+        selector: getSelector(cta)
+      });
+    }
   }
-}
 
   function startTracking() {
     if (trackingStarted) return;
-
-    // const container = getPageContainer();
-    // if (!container) {
-    //   window.requestAnimationFrame(startTracking);
-    //   return;
-    // }
 
     trackingStarted = true;
 

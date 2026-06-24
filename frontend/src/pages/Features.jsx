@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import "../styles/features.css";
 
 const features = [
   ["Tracker", "Page views, CTA clicks, coordinates, and time spent."],

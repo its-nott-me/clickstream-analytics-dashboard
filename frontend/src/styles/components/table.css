@@ -1,0 +1,30 @@
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
+}
+
+th,
+td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+th {
+  background: #f6f8fa;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+tr.clickable:hover,
+tr.selected {
+  background: #eef8f6;
+  cursor: pointer;
+}

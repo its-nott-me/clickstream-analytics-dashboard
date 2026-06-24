@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import "../styles/analytics.css";
+import "../styles/components/table.css";
 
-const BASE_URL = "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL;
+const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
 
 const formatDuration = (ms = 0) => {
   if (!ms) return "0s";
@@ -16,13 +19,6 @@ const pagePath = (url = "") => {
   } catch {
     return url || "/";
   }
-};
-
-const eventLabel = (event) => {
-  if (event.eventType === "page_view") return "Page view";
-  if (event.eventType === "cta_click") return `CTA: ${event.metadata?.label || "Untitled"}`;
-  if (event.eventType === "time_spent") return `Time: ${formatDuration(event.metadata?.durationMs)}`;
-  return "Click";
 };
 
 const BarList = ({ data = [], empty = "No data yet." }) => {
@@ -83,7 +79,7 @@ const Analytics = () => {
   const [sessions, setSessions] = useState([]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [sessionEvents, setSessionEvents] = useState([]);
-  const [urlInput, setUrlInput] = useState("http://localhost:5173/");
+  const [urlInput, setUrlInput] = useState(FRONTEND_URL + "/");
   const [heatmapClicks, setHeatmapClicks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -175,8 +171,8 @@ const Analytics = () => {
     setError("");
     try {
       const [summaryRes, sessionsRes] = await Promise.all([
-        axios.get(`${BASE_URL}/events/summary`),
-        axios.get(`${BASE_URL}/sessions`)
+        axios.get(`${API_URL}/events/summary`),
+        axios.get(`${API_URL}/sessions`)
       ]);
       setSummary(summaryRes.data.data);
       setSessions(sessionsRes.data.data);
@@ -188,7 +184,7 @@ const Analytics = () => {
   const fetchSessionJourney = async (sessionId) => {
     setSelectedSessionId(sessionId);
     try {
-      const res = await axios.get(`${BASE_URL}/sessions/${sessionId}/events`);
+      const res = await axios.get(`${API_URL}/sessions/${sessionId}/events`);
       setSessionEvents(res.data.data);
     } catch {
       setError("Could not load journey.");
@@ -199,7 +195,7 @@ const Analytics = () => {
     setLoading(true);
     try {
       const heatmapRes = await axios.get(
-        `${BASE_URL}/heatmaps?url=${encodeURIComponent(urlInput)}`
+        `${API_URL}/heatmaps?url=${encodeURIComponent(urlInput)}`
       );
       setHeatmapClicks(heatmapRes.data.data);
     } finally {
@@ -211,7 +207,7 @@ const Analytics = () => {
     setLoading(true);
     setError("");
     try{
-      await axios.get(`${BASE_URL}/heatmaps/page-assets`).then(res => {setPageAssets(res.data.data)})
+      await axios.get(`${API_URL}/heatmaps/page-assets`).then(res => {setPageAssets(res.data.data)})
     } catch {
       setError("Could not load page assets.");
     } finally {
@@ -421,7 +417,7 @@ const Analytics = () => {
                 {pageOptions.map((path) => (
                   <option
                     key={path}
-                    value={`http://localhost:5173${path}`}
+                    value={`${FRONTEND_URL}${path}`}
                   >
                     {pageAssets[path]?.label || path}
                   </option>

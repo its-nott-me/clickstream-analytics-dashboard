@@ -1,4 +1,5 @@
 import Event from "../models/Event.js";
+const API_URL = process.env.API_URL;
 
 // @desc    Ingest batched events
 // @route   POST /api/events
@@ -255,10 +256,10 @@ export const getPageAssets = async (req, res) => {
   try {
     // store in mongo to avoid redeployment
     const PAGE_ASSETS = {
-      "/": { src: "http://localhost:5000/api/uploads/home.png", width: 2474, height: 2970, label: "Home" },
-      "/features": { src: "http://localhost:5000/api/uploads/features.png", width: 2474, height: 2366, label: "Features" },
-      "/pricing": { src: "http://localhost:5000/api/uploads/pricing.png", width: 2474, height: 1346, label: "Pricing" },
-      "/contact": { src: "http://localhost:5000/api/uploads/contact.png", width: 2474, height: 1620, label: "Contact" }
+      "/": { src: `${API_URL}/uploads/home.png`, width: 2474, height: 2970, label: "Home" },
+      "/features": { src: `${API_URL}/uploads/features.png`, width: 2474, height: 2366, label: "Features" },
+      "/pricing": { src: `${API_URL}/uploads/pricing.png`, width: 2474, height: 1346, label: "Pricing" },
+      "/contact": { src: `${API_URL}/uploads/contact.png`, width: 2474, height: 1620, label: "Contact" }
     };
     return res.status(200).json({ success: true, data: PAGE_ASSETS});
   } catch {

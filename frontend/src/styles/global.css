@@ -1,0 +1,143 @@
+.app-container,
+#page-container {
+  min-height: 100vh;
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 0.9rem clamp(1rem, 4vw, 4rem);
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(250, 251, 252, 0.88);
+  backdrop-filter: blur(18px);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.logo-mark {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: conic-gradient(from 180deg, #111827, #0ea5a4, #b45309, #111827);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nav-item {
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: var(--text-primary);
+  background: #eef2f4;
+}
+
+.nav-cta {
+  border: 1px solid #111827;
+  background: #111827;
+  color: #ffffff;
+}
+
+.nav-cta:hover,
+.nav-cta.active {
+  color: #252525;
+}
+
+.main-content {
+  min-height: calc(100vh - 64px);
+}
+
+.dashboard-card h3 {
+  margin: 0 0 0.65rem;
+}
+
+.page-title {
+  margin: 0;
+  font-size: clamp(2.1rem, 5vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.dashboard-card,
+.panel {
+  padding: 1rem;
+}
+
+.dashboard-card {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 900px) {
+  .navbar,
+  .dashboard-header,
+  .dashboard-actions,
+  .url-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nav-links {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .hero,
+  .visual-dashboard,
+  .dashboard-grid,
+  .analytics-grid,
+  .feature-showcase,
+  .section-grid,
+  .stat-grid,
+  .pricing-grid,
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-frame {
+    min-height: auto;
+  }
+
+  .hero-media,
+  .feature-showcase img,
+  .contact-media {
+    min-height: 320px;
+  }
+
+  .metric-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1;
+    text-align: center;
+  }
+}
