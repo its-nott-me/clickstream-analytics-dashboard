@@ -18,14 +18,6 @@ const pagePath = (url = "") => {
   }
 };
 
-const heatmapRoute = (url = "") => {
-  const path = pagePath(url);
-  if (path === "/features") return "features";
-  if (path === "/pricing") return "pricing";
-  if (path === "/contact") return "contact";
-  return "home";
-};
-
 const eventLabel = (event) => {
   if (event.eventType === "page_view") return "Page view";
   if (event.eventType === "cta_click") return `CTA: ${event.metadata?.label || "Untitled"}`;
@@ -55,85 +47,6 @@ const BarList = ({ data = [], empty = "No data yet." }) => {
   );
 };
 
-const HeatmapSkeleton = ({ route }) => {
-  if (route === "features") {
-    return (
-      <>
-        {/* <div className="skel-topbar" />
-        <div className="skel-title compact" />
-        <div className="skel-feature-layout">
-          <div className="skel-image" />
-          <div className="skel-stack">
-            <span /><span /><span />
-          </div>
-        </div>
-        <div className="skel-two-col">
-          <div className="skel-panel tall" />
-          <div className="skel-panel short" />
-        </div>
-        <div className="skel-cta" /> */}
-        
-      <img style={{width: '100%', height: '100%'}} src='http://localhost:5000/api/uploads/features.png'/>
-      </>
-    );
-  }
-
-  if (route === "pricing") {
-    return (
-      <>
-        {/* <div className="skel-topbar" />
-        <div className="skel-title" />
-        <div className="skel-pricing">
-          <div className="skel-price-card" />
-          <div className="skel-price-card dark" />
-        </div> */}
-        
-      <img style={{width: '100%', height: '100%'}} src='http://localhost:5000/api/uploads/pricing.png'/>
-      </>
-    );
-  }
-
-  if (route === "contact") {
-    return (
-      <>
-        {/* <div className="skel-topbar" />
-        <div className="skel-contact">
-          <div className="skel-image" />
-          <div className="skel-form">
-            <span /><span /><span /><span />
-          </div>
-        </div> */}
-        
-      <img style={{width: '100%', height: '100%'}} src='http://localhost:5000/api/uploads/contact.png'/>
-      </>
-    );
-  }
-
-  // default to homepage
-  return (
-    <>
-      {/* <div className="skel-topbar" />
-      <div className="skel-home-hero">
-        <div className="skel-copy">
-          <span className="line small" />
-          <span className="line xl" />
-          <span className="line xl narrow" />
-          <span className="line medium" />
-          <div className="skel-buttons"><span /><span /></div>
-          <div className="skel-metrics"><span /><span /><span /></div>
-        </div>
-        <div className="skel-image hero-img" />
-      </div>
-      <div className="skel-dashboard-preview">
-        <div className="skel-list"><span /><span /><span /></div>
-        <div className="skel-heat-preview" />
-      </div>
-      <div className="skel-three-cards"><span /><span /><span /></div> */}
-      <img style={{width: '100%', height: '100%'}} src='http://localhost:5000/api/uploads/home.png'/>
-    </>
-  );
-};
-
 const Analytics = () => {
   const [activeTab, setActiveTab] = useState("sessions");
   const [summary, setSummary] = useState(null);
@@ -142,7 +55,8 @@ const Analytics = () => {
   const [sessionEvents, setSessionEvents] = useState([]);
   const [urlInput, setUrlInput] = useState("http://localhost:5173/");
   const [heatmapClicks, setHeatmapClicks] = useState([]);
-  const [heatmapMeta, setHeatmapMeta] = useState({ documentHeight: 2200, documentWidth: 1440, clickCount: 0 });
+  const [heatmapMeta, setHeatmapMeta] = useState({ documentHeight: 0, documentWidth: 0, clickCount: 0 });
+  const [screenshot, setScreenshot] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -150,7 +64,6 @@ const Analytics = () => {
     () => sessions.find((session) => session.sessionId === selectedSessionId),
     [sessions, selectedSessionId]
   );
-  const activeHeatmapRoute = heatmapRoute(urlInput);
 
   const refreshOverview = async () => {
     setError("");
@@ -179,11 +92,27 @@ const Analytics = () => {
   const fetchHeatmap = async () => {
     setLoading(true);
     setError("");
+    setScreenshot(null);
+
     try {
-      const res = await axios.get(`${BASE_URL}/heatmaps?url=${encodeURIComponent(urlInput)}`);
-      setHeatmapClicks(res.data.data);
-      console.log(res.data.meta)
-      setHeatmapMeta(res.data.meta || { documentHeight: 2200, documentWidth: 1440, clickCount: res.data.data.length });
+      const [heatmapRes, screenshotRes] = await Promise.allSettled([
+        axios.get(`${BASE_URL}/heatmaps?url=${encodeURIComponent(urlInput)}`),
+        axios.get(`${BASE_URL}/screenshots?route=${encodeURIComponent(urlInput)}`)
+      ]);
+
+      if (heatmapRes.status === "fulfilled") {
+        setHeatmapClicks(heatmapRes.value.data.data);
+        setHeatmapMeta(heatmapRes.value.data.meta || { clickCount: heatmapRes.value.data.data.length });
+      } else {
+        setHeatmapClicks([]);
+        setHeatmapMeta({ documentHeight: 0, documentWidth: 0, clickCount: 0 });
+      }
+
+      if (screenshotRes.status === "fulfilled") {
+        setScreenshot(screenshotRes.value.data.data);
+      } else {
+        setError("No screenshot stored for this route yet. Visit the page once with the tracker active, then regenerate.");
+      }
     } catch {
       setError("Could not load heatmap.");
     } finally {
@@ -287,28 +216,39 @@ const Analytics = () => {
         <div className="dashboard-card">
           <div className="dashboard-header" style={{ marginBottom: "1rem" }}>
             <div>
-              <h3>Scrollable heatmap</h3>
-              <p className="muted">{heatmapMeta.clickCount || heatmapClicks.length} clicks · {Math.round(heatmapMeta.documentHeight || 2200)}px · {pagePath(urlInput)}</p>
+              <h3>Screenshot heatmap</h3>
+              <p className="muted">
+                {(heatmapMeta.clickCount || heatmapClicks.length)} clicks
+                {screenshot ? ` · ${screenshot.width}x${screenshot.height}px · ${pagePath(screenshot.route)}` : ` · ${pagePath(urlInput)}`}
+              </p>
             </div>
             <div className="url-form">
               <input value={urlInput} onChange={(event) => setUrlInput(event.target.value)} placeholder="http://localhost:5173/" />
               <button className="btn btn-primary" onClick={fetchHeatmap} disabled={loading}>{loading ? "Loading" : "Generate"}</button>
             </div>
           </div>
+
           <div className="heatmap-scroll-shell">
-            <div className={`heatmap-page `} style={{ height: `${980 * (2970 / 2474)}px` }}>
-              <HeatmapSkeleton route={activeHeatmapRoute} />
-              {heatmapClicks.length ? heatmapClicks.map((click, index) => (
-                <span
-                  className="heatmap-dot"
-                  key={`${click.x}-${click.y}-${index}`}
-                  title={`x ${Number(click.x || 0).toFixed(3)}, y ${Number(click.y || 0).toFixed(3)}`}
-style={{
-  left: `${(click.absoluteX / click.documentWidth) * 100}%`,
-  top: `${(click.absoluteY / click.documentHeight) * 100}%`
-}}                />
-              )) : <div className="empty-state">No click coordinates for this URL.</div>}
-            </div>
+            {screenshot ? (
+              <div className="heatmap-image-frame">
+                <img className="heatmap-screenshot" src={screenshot.url} alt={`Captured page ${pagePath(screenshot.route)}`} />
+                <div className="heatmap-overlay">
+                  {heatmapClicks.map((click, index) => (
+                    <span
+                      className="heatmap-dot"
+                      key={`${click.x}-${click.y}-${index}`}
+                      title={`x ${Number(click.x || 0).toFixed(3)}, y ${Number(click.y || 0).toFixed(3)}`}
+                      style={{
+                        left: `${Number(click.x || 0) * 100}%`,
+                        top: `${Number(click.y || 0) * 100}%`
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="empty-state">No screenshot available for this route.</div>
+            )}
           </div>
         </div>
       )}

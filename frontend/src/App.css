@@ -548,6 +548,27 @@ textarea:focus {
   background: #dfe6eb;
 }
 
+.heatmap-image-frame {
+  position: relative;
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
+}
+
+.heatmap-screenshot {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.heatmap-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .heatmap-page {
   position: relative;
   width: min(100%, 980px);

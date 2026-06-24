@@ -1,11 +1,15 @@
 (function() {
   const BACKEND_URL = "http://localhost:5000/api/events";
+  const SCREENSHOT_URL = "http://localhost:5000/api/screenshots";
+  const HTML2CANVAS_URL = "/vendor/html2canvas.min.js";
   const BATCH_SIZE_LIMIT = 10;
   const FLUSH_INTERVAL_MS = 5000;
   
   let eventQueue = [];
   let currentUrl = normalizeUrl(window.location.href);
   let pageStartedAt = Date.now();
+  let screenshotCaptureInFlight = false;
+  const knownScreenshotRoutes = new Set();
 
   // Generate UUID v4 for session ID (naive implementation for browser without dependencies)
   function uuidv4() {
@@ -45,6 +49,88 @@
       scroll_x: window.scrollX || window.pageXOffset || 0,
       scroll_y: window.scrollY || window.pageYOffset || 0
     };
+  }
+
+  function loadHtml2Canvas() {
+    if (window.html2canvas) {
+      return Promise.resolve(window.html2canvas);
+    }
+
+    return new Promise((resolve, reject) => {
+      const existingScript = document.querySelector("script[data-cf-html2canvas]");
+      if (existingScript) {
+        existingScript.addEventListener("load", () => resolve(window.html2canvas), { once: true });
+        existingScript.addEventListener("error", reject, { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = HTML2CANVAS_URL;
+      script.async = true;
+      script.defer = true;
+      script.dataset.cfHtml2canvas = "true";
+      script.onload = () => resolve(window.html2canvas);
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  async function maybeCaptureRouteScreenshot(route = currentUrl) {
+    if (!shouldTrackUrl(route) || screenshotCaptureInFlight) return;
+
+    if (knownScreenshotRoutes.has(route)) return;
+
+    screenshotCaptureInFlight = true;
+
+    try {
+      const existsResponse = await fetch(`${SCREENSHOT_URL}/exists?route=${encodeURIComponent(route)}`);
+      if (existsResponse.ok) {
+        const existsPayload = await existsResponse.json();
+        if (existsPayload.exists) {
+          knownScreenshotRoutes.add(route);
+          return;
+        }
+      }
+
+      const html2canvas = await loadHtml2Canvas();
+      const metrics = getPageMetrics();
+
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      if (route !== currentUrl) return;
+
+      const canvas = await html2canvas(document.documentElement, {
+        backgroundColor: window.getComputedStyle(document.body).backgroundColor || "#ffffff",
+        width: metrics.document_width,
+        height: metrics.document_height,
+        windowWidth: metrics.document_width,
+        windowHeight: metrics.document_height,
+        scrollX: 0,
+        scrollY: 0,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        scale: 1
+      });
+
+      const uploadResponse = await fetch(SCREENSHOT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          route,
+          imageData: canvas.toDataURL("image/png"),
+          width: canvas.width,
+          height: canvas.height
+        })
+      });
+
+      if (uploadResponse.ok) {
+        knownScreenshotRoutes.add(route);
+      }
+    } catch (error) {
+      console.warn("Screenshot capture skipped:", error);
+    } finally {
+      screenshotCaptureInFlight = false;
+    }
   }
 
   function getSelector(el) {
@@ -117,6 +203,8 @@
     pageStartedAt = Date.now();
     if (shouldTrackUrl(currentUrl)) {
       queueEvent("page_view", getPageMetrics());
+      const routeToCapture = currentUrl;
+      window.setTimeout(() => maybeCaptureRouteScreenshot(routeToCapture), 1200);
     }
   }
 
