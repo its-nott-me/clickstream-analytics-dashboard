@@ -32,7 +32,7 @@ const Analytics = () => {
   const [sessionEvents, setSessionEvents] = useState([]);
   const [urlInput, setUrlInput] = useState(FRONTEND_URL + "/");
   const [heatmapClicks, setHeatmapClicks] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [error, setError] = useState("");
   const [pageAssets, setPageAssets] = useState({});
 
@@ -144,26 +144,26 @@ const Analytics = () => {
   };
 
   const fetchHeatmap = async () => {
-    setLoading(true);
+    setHeatmapLoading(true);
     try {
       const heatmapRes = await axios.get(
         `${API_URL}/heatmaps?url=${encodeURIComponent(urlInput)}`
       );
       setHeatmapClicks(heatmapRes.data.data);
     } finally {
-      setLoading(false);
+      setHeatmapLoading(false);
     }
   };
 
   const fetchPageAssets = async() => {
-    setLoading(true);
+    setHeatmapLoading(true);
     setError("");
     try{
       await axios.get(`${API_URL}/heatmaps/page-assets`).then(res => {setPageAssets(res.data.data)})
     } catch {
       setError("Could not load page assets.");
     } finally {
-      setLoading(false);
+      setHeatmapLoading(false);
     }
   }
 
@@ -179,8 +179,6 @@ const Analytics = () => {
 
     fetchHeatmap(urlInput);
   }, [urlInput])
-
-  if(loading) return null;
 
   return (
     <div id="page-container" className="container dashboard-shell">
@@ -229,6 +227,7 @@ const Analytics = () => {
           pageOptions={pageOptions}
           urlInput={urlInput}
           setUrlInput={setUrlInput}
+          heatmapLoading={heatmapLoading}
         />
       )}
 

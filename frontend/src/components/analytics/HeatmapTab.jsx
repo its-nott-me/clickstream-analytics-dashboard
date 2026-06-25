@@ -25,6 +25,7 @@ export const HeatMapTab = ({
   pageOptions,
   urlInput,
   setUrlInput,
+  heatmapLoading
 }) => {
   const [selectedSegment, setSelectedSegment] = useState("desktop");
   const segmentedClicks = useMemo(
@@ -87,10 +88,13 @@ export const HeatMapTab = ({
           </button>
         ))}
       </div>
-
-      <div className="heatmap-stage">
-        <HeatmapCanvas asset={selectedAssetForSegment} clicks={segmentedClicks} />
-      </div>
+      {heatmapLoading ? 
+        <div>Loading heatmap...</div> : (
+        <div className="heatmap-stage">
+          <HeatmapCanvas asset={selectedAssetForSegment} clicks={segmentedClicks} />
+        </div>
+        )
+      }
     </div>
   );
 };
