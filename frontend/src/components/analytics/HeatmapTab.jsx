@@ -89,7 +89,7 @@ export const HeatMapTab = ({
         ))}
       </div>
       {heatmapLoading ? 
-        <div>Loading heatmap...</div> : (
+        <div className="empty-state">Loading heatmap...</div> : (
         <div className="heatmap-stage">
           <HeatmapCanvas asset={selectedAssetForSegment} clicks={segmentedClicks} />
         </div>
